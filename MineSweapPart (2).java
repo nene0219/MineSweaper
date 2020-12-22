@@ -1,4 +1,6 @@
 import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
 
 public class MineSweapPart extends JFrame {
 	private static final long serialVersionUID = 1L;
@@ -11,8 +13,8 @@ public class MineSweapPart extends JFrame {
 	private static final int ALL_MINES_IN_PERIMETER_GRID_VALUE = 8;
 	private static final int IS_A_MINE_IN_GRID_VALUE = 9;
 
-	private static int guessedMinesLeft = MineSweapPart.TOTAL_MINES;
-	private static int actualMinesLeft = MineSweapPart.TOTAL_MINES;
+	private static int guessedMinesLeft = TOTAL_MINES;
+	private static int actualMinesLeft = TOTAL_MINES;
 
 	private static final String UNEXPOSED_FLAGGED_MINE_SYMBOL = "@";
 	private static final String EXPOSED_MINE_SYMBOL = "M";
@@ -20,7 +22,6 @@ public class MineSweapPart extends JFrame {
 	// visual indication of an exposed MyJButton
 	private static final Color CELL_EXPOSED_BACKGROUND_COLOR = Color.lightGray;
 	// colors used when displaying the getStateStr() String
-
 	private static final Color CELL_EXPOSED_FOREGROUND_COLOR_MAP[] = { Color.lightGray, Color.blue, Color.green,
 			Color.cyan, Color.yellow, Color.orange, Color.pink, Color.magenta, Color.red, Color.red };
 
@@ -64,31 +65,21 @@ public class MineSweapPart extends JFrame {
 		// your code here ...
 		int mCnt = 0;
 		while (mCnt < MineSweapPart.TOTAL_MINES) {
-			int r = (int) (Math.random() + MineSweapPart.MINE_GRID_ROWS);
-			int c = (int) (Math.random() + MineSweapPart.MINE_GRID_COLS);
-			if (this.mineGrid[r][c] != 9) {
+			int r = (int) (Math.random() * MineSweapPart.MINE_GRID_ROWS);
+			int c = (int) (Math.random() * MineSweapPart.MINE_GRID_COLS);
+  			if (this.mineGrid[r][c] != 9) {
 				this.mineGrid[r][c] = 9;
 
-				for (int rm = -1; rm < 2; ++rm)
-					for (int cm = -1; cm < 2; ++cm)
-						if (!(rm == 0 && cm == 0) && (r + rm >= 0 && r + rm < MineSweapPart.MINE_GRID_ROWS)
-								&& (c + cm >= 0 && c + cm < MineSweapPart.MINE_GRID_COLS))
-							if (this.mineGrid[r + rm][c + cm] != 9)
-								++this.mineGrid[r + rm][c + cm];
+				for (int gr = -1; gr < 2; ++gr)
+					for (int gc = -1; gc < 2; ++gc)
+						if (!(gr == 0 && gc == 0) && (r + gr >= 0 && r + gr < MineSweapPart.MINE_GRID_ROWS)
+								&& (c + gc >= 0 && c + gc < MineSweapPart.MINE_GRID_COLS))
+							if (this.mineGrid[r + gr][c + gc] != 9)
+								++this.mineGrid[r + gr][c + gc];
 				++mCnt;
 
 			}
 		}
-
-	}
-
-	private String getStateStr(int row, int col) {
-		if (this.mineGrid[row][col] == 0)
-			return "";
-		else if (this.mineGrid[row][col] > 0 && this.mineGrid[row][col] < 9)
-			return "" + this.mineGrid[row][col];
-		else
-			return MineSweapPart.EXPOSED_MINE_SYMBOL;
 	}
 
 	private String getGridValueStr(int row, int col) {
@@ -123,6 +114,12 @@ public class MineSweapPart extends JFrame {
 					if (mineGrid[mjb.ROW][mjb.COL] == IS_A_MINE_IN_GRID_VALUE) {
 						// what else do you need to adjust?
 						// could the game be over?
+						MineSweapPart.actualMinesLeft--;
+						if (MineSweapPart.actualMinesLeft==0) {
+			        		running=false;
+			        		setTitle("Mine Field Cleared");
+			        		return;
+				        }
 					}
 					setTitle("MineSweap                                                         "
 							+ MineSweapPart.guessedMinesLeft + " Mines left");
@@ -149,13 +146,6 @@ public class MineSweapPart extends JFrame {
 		public void exposeCell(MyJButton mjb) {
 			if (!running)
 				return;
-			if(exposedCells[mjb.ROW][mjb.COL])
-				return;
-			else
-			{
-				exposedCells[mjb.ROW][mjb.COL]=true;
-				
-			}
 
 			// expose this MyJButton
 			mjb.setBackground(CELL_EXPOSED_BACKGROUND_COLOR);
@@ -166,6 +156,15 @@ public class MineSweapPart extends JFrame {
 			if (mineGrid[mjb.ROW][mjb.COL] == IS_A_MINE_IN_GRID_VALUE) {
 				// what else do you need to adjust?
 				// could the game be over?
+				running=false;
+				setTitle("MineSweap YOU LOST!");
+				for(int i = 0; i < MINE_GRID_ROWS * MINE_GRID_COLS; i++) {
+					MyJButton jb = (MyJButton)mjb.getParent().getComponent(i);
+					if(mineGrid[i / MINE_GRID_ROWS][i % MINE_GRID_COLS] == IS_A_MINE_IN_GRID_VALUE) {
+						jb.setForeground(Color.RED);
+						jb.setText(MineSweapPart.EXPOSED_MINE_SYMBOL);
+					}
+				}
 				return;
 			}
 
@@ -179,6 +178,22 @@ public class MineSweapPart extends JFrame {
 				// .
 				// Hint : MyJButton jbn = (MyJButton)mjb.getParent().getComponent(<linear
 				// index>);
+				for(int gr = 0; gr < MINE_GRID_ROWS; gr++) {
+					for(int gc = 0; gc < MINE_GRID_COLS; gc++) {
+						if(mineGrid[gr][gc] == IS_A_MINE_IN_GRID_VALUE || !getGridValueStr(gr,gc).isEmpty() && !getGridValueStr(gr, gc).equals("1")) {
+							continue;
+						}
+						else {
+							MyJButton jbn = (MyJButton) mjb.getParent().getComponent(gr * MINE_GRID_COLS + gc);
+							boolean flagged = jbn.getText().equals(MineSweapPart.UNEXPOSED_FLAGGED_MINE_SYMBOL);
+							// is the MyJbutton that the mouse action occurred in already exposed
+							boolean exposed = jbn.getBackground().equals(CELL_EXPOSED_BACKGROUND_COLOR);
+							if(!flagged && !exposed) {
+								exposeCell(jbn);
+							}
+						}
+					}
+				}
 			}
 		}
 	}
