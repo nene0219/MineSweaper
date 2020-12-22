@@ -170,21 +170,19 @@ public class MineSweapPart extends JFrame {
 
 			// if the MyJButton that was just exposed has no mines in its perimeter
 			if (mineGrid[mjb.ROW][mjb.COL] == NO_MINES_IN_PERIMETER_GRID_VALUE) {
-				// lots of work here - must expose all MyJButtons in its perimeter
-				// and so on
-				// and so on
-				// .
-				// .
-				// .
-				// Hint : MyJButton jbn = (MyJButton)mjb.getParent().getComponent(<linear
-				// index>);
-				for(int gr = 0; gr < MINE_GRID_ROWS; gr++) {
-					for(int gc = 0; gc < MINE_GRID_COLS; gc++) {
-						if(mineGrid[gr][gc] == IS_A_MINE_IN_GRID_VALUE || !getGridValueStr(gr,gc).isEmpty() && !getGridValueStr(gr, gc).equals("1")) {
-							continue;
-						}
-						else {
-							MyJButton jbn = (MyJButton) mjb.getParent().getComponent(gr * MINE_GRID_COLS + gc);
+				for(int row = mjb.ROW-1; row <= mjb.ROW+1; row++) {
+					if(row < 0 || row >= MINE_GRID_ROWS)
+					    continue;
+					for(int col = mjb.COL-1; col <= mjb.COL+1; col++) {
+						if(col < 0 || col >= MINE_GRID_COLS)
+						      continue;
+						
+						String value = getGridValueStr(row, col);
+						if(mineGrid[row][col] == IS_A_MINE_IN_GRID_VALUE || !value.isEmpty() && !"123456789".contains(getGridValueStr(row, col))) {
+						    continue;
+						} else {
+							getGridValueStr(row,col);
+							MyJButton jbn = (MyJButton) mjb.getParent().getComponent(row * MINE_GRID_COLS + col);
 							boolean flagged = jbn.getText().equals(MineSweapPart.UNEXPOSED_FLAGGED_MINE_SYMBOL);
 							// is the MyJbutton that the mouse action occurred in already exposed
 							boolean exposed = jbn.getBackground().equals(CELL_EXPOSED_BACKGROUND_COLOR);
